@@ -11,9 +11,10 @@ locals {
 }
 
 resource "aws_route" "to_tgw" {
-  for_each                   = local.merged_routes
-  route_table_id             = lookup(each.value, "rtb_id")
-  transit_gateway_id         = var.transit_gateway_id != "" ? var.transit_gateway_id : null
+  for_each       = local.merged_routes
+  route_table_id = lookup(each.value, "rtb_id")
+  # only one of transit_gateway_id or vpc_peering_connection_id may be set. So if the vpc_peer_conn_id is set this will be null.
+  transit_gateway_id         = var.vpc_peering_connection_id != "" ? null : var.transit_gateway_id
   destination_cidr_block     = lookup(each.value, "route", null)
   destination_prefix_list_id = lookup(each.value, "prefix_list_id", null)
   vpc_peering_connection_id  = var.vpc_peering_connection_id != "" ? var.vpc_peering_connection_id : null
