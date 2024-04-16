@@ -5,16 +5,16 @@ data "aws_route_table" "this" {
 
 locals {
   rtb_ids                    = concat(data.aws_route_table.this[*].id, var.route_table_ids)
-  map_of_tables_and_routes   = merge(tolist(flatten([for id in local.rtb_ids : {for r in var.routes : "${id}_${r}"=> { rtb_id = id, route = r }}]))...)
-  map_of_tables_and_prefixes = merge(tolist(flatten([for id in local.rtb_ids : {for pl in var.prefix_list_ids : "${id}_${pl}" => { rtb_id = id, prefix_list_id = pl }}]))...)
+  map_of_tables_and_routes   = merge(tolist(flatten([for id in local.rtb_ids : { for r in var.routes : "${id}_${r}" => { rtb_id = id, route = r } }]))...)
+  map_of_tables_and_prefixes = merge(tolist(flatten([for id in local.rtb_ids : { for pl in var.prefix_list_ids : "${id}_${pl}" => { rtb_id = id, prefix_list_id = pl } }]))...)
   merged_routes              = merge(local.map_of_tables_and_routes, local.map_of_tables_and_prefixes)
 }
 
 resource "aws_route" "to_tgw" {
   for_each                   = local.merged_routes
   route_table_id             = lookup(each.value, "rtb_id")
-  transit_gateway_id         = var.transit_gateway_id
+  transit_gateway_id         = var.transit_gateway_id != "" ? var.transit_gateway_id : null
   destination_cidr_block     = lookup(each.value, "route", null)
   destination_prefix_list_id = lookup(each.value, "prefix_list_id", null)
-  vpc_peering_connection_id  = var.vpc_peering_connection_id
+  vpc_peering_connection_id  = var.vpc_peering_connection_id != "" ? var.vpc_peering_connection_id : null
 }
