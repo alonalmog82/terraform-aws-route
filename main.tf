@@ -16,4 +16,5 @@ resource "aws_route" "to_tgw" {
   transit_gateway_id         = var.transit_gateway_id
   destination_cidr_block     = lookup(each.value, "route", null)
   destination_prefix_list_id = lookup(each.value, "prefix_list_id", null)
+  vpc_peering_connection_id  = var.vpc_peering_connection_id
 }
